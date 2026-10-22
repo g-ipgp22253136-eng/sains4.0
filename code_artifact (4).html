@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小仙女的梦幻科学扭蛋机</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fairy: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                        }
+                    },
+                    fontFamily: {
+                        cute: ['"ZCOOL KuaiLe"', 'cursive', 'sans-serif'],
+                        main: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', 'ZCOOL KuaiLe', sans-serif;
+            background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 50%, #fef3c7 100%);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            min-height: 100vh;
+        }
+        .cute-font {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        /* 扭蛋机外观样式 */
+        .gachapon-glass {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4) 60%, rgba(253, 164, 175, 0.3));
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8), 0 10px 25px rgba(225, 29, 72, 0.2);
+            border: 6px solid #fb7185;
+        }
+
+        .gachapon-base {
+            background: linear-gradient(180deg, #fb7185 0%, #e11d48 100%);
+            box-shadow: 0 12px 20px rgba(159, 18, 57, 0.3);
+        }
+
+        /* 把手旋转动画 */
+        .crank-rotate {
+            animation: rotateCrank 0.8s ease-in-out;
+        }
+        @keyframes rotateCrank {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 扭蛋球掉落动画 */
+        @keyframes eggDrop {
+            0% { transform: translateY(-120px) scale(0.3) rotate(0deg); opacity: 0; }
+            60% { transform: translateY(20px) scale(1.1) rotate(180deg); opacity: 1; }
+            80% { transform: translateY(-5px) scale(0.95) rotate(220deg); }
+            100% { transform: translateY(0) scale(1) rotate(240deg); opacity: 1; }
+        }
+        .egg-drop-anim {
+            animation: eggDrop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 扭蛋闪烁摇晃 */
+        @keyframes eggShake {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            20% { transform: rotate(-8deg) scale(1.05); }
+            40% { transform: rotate(8deg) scale(1.05); }
+            60% { transform: rotate(-5deg) scale(1.02); }
+            80% { transform: rotate(5deg) scale(1.02); }
+        }
+        .egg-bounce {
+            animation: eggShake 1.5s infinite ease-in-out;
+        }
+
+        /* 浮动提示 */
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+        }
+        .float-text {
+            animation: floatUp 1.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-10 flex flex-col items-center">
+
+    <!-- 主界面容器 -->
+    <div class="w-full max-w-4xl px-3 sm:px-6 py-4">
+
+        <!-- 顶部标题 -->
+        <header class="bg-white/90 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-xl border-4 border-pink-300 mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-400 to-purple-500 flex items-center justify-center text-white text-2xl shadow-md transform -rotate-3">
+                    <i class="fa-solid fa-gem"></i>
+                </div>
+                <div>
+                    <h1 class="cute-font text-xl sm:text-2xl text-pink-600 drop-shadow">小仙女的梦幻科学扭蛋机</h1>
+                    <p class="text-xs text-pink-400 font-bold">一年级科学·单元 1-8 综合闯关 (50题)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="toggleSound()" id="btn-sound" class="w-10 h-10 rounded-2xl bg-pink-100 hover:bg-pink-200 text-pink-600 flex items-center justify-center transition shadow border border-pink-200">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="resetGameConfirm()" class="px-3 py-2 rounded-2xl bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-black transition shadow border border-purple-200 flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-right"></i> 重置游戏
+                </button>
+            </div>
+        </header>
+
+        <!-- 4位学生名字设置与玩家卡片 -->
+        <section class="bg-white/90 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-xl border-4 border-pink-200 mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="cute-font text-pink-700 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-users text-pink-500"></i> 小仙女玩家名单（4人轮流）
+                </h2>
+                <span id="turn-indicator-badge" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-xs px-3 py-1 rounded-full shadow animate-pulse">
+                    当前回合: 小仙女 1
+                </span>
+            </div>
+
+            <!-- 4个玩家输入框与状态卡 -->
+            <div id="players-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <!-- 由 JS 动态渲染 4 位小女生的名字框与得分卡 -->
+            </div>
+        </section>
+
+        <!-- 游戏核心区：巨型扭蛋机 -->
+        <section class="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl border-4 border-pink-200 flex flex-col items-center relative overflow-hidden">
+
+            <!-- 扭蛋机主体 -->
+            <div class="w-full max-w-sm flex flex-col items-center">
+
+                <!-- 扭蛋机玻璃罩容器 -->
+                <div class="w-64 h-64 sm:w-72 sm:h-72 rounded-full gachapon-glass relative flex items-center justify-center overflow-hidden shadow-2xl">
+                    <!-- 玻璃反光光泽 -->
+                    <div class="absolute top-3 left-6 w-16 h-8 bg-white/60 rounded-full transform -rotate-45 blur-xs"></div>
+                    
+                    <!-- 容器内的多色彩蛋 -->
+                    <div id="gacha-balls-container" class="w-full h-full relative">
+                        <!-- 动态生成浮动彩蛋 -->
+                    </div>
+                </div>
+
+                <!-- 扭蛋机底座 -->
+                <div class="w-72 sm:w-80 h-44 gachapon-base rounded-b-3xl -mt-6 pt-6 px-4 flex flex-col items-center justify-between relative border-4 border-pink-400">
+                    
+                    <!-- 扭蛋摇杆/把手区域 -->
+                    <div class="flex items-center justify-between w-full px-4 mt-1">
+                        <!-- 左侧装饰灯 -->
+                        <div class="w-4 h-4 rounded-full bg-yellow-300 animate-ping"></div>
+
+                        <!-- 旋转把手 -->
+                        <div id="gacha-crank-btn" onclick="turnCrank()" class="w-20 h-20 rounded-full bg-yellow-400 border-4 border-amber-500 shadow-lg flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition transform relative">
+                            <div class="w-16 h-4 bg-amber-600 rounded-full transform rotate-45"></div>
+                            <div class="w-6 h-6 rounded-full bg-white border-2 border-amber-600 absolute shadow"></div>
+                        </div>
+
+                        <!-- 右侧装饰灯 -->
+                        <div class="w-4 h-4 rounded-full bg-pink-300 animate-ping"></div>
+                    </div>
+
+                    <!-- 扭蛋出口与按钮指示 -->
+                    <div class="w-full flex items-center justify-around mb-2">
+                        <!-- 扭蛋出口槽 -->
+                        <div class="w-24 h-16 bg-slate-900 rounded-t-2xl border-4 border-rose-300 relative flex items-center justify-center shadow-inner overflow-hidden">
+                            <div id="egg-exit-area" class="relative z-10">
+                                <!-- 掉出的扭蛋会在这里显示 -->
+                            </div>
+                        </div>
+
+                        <!-- 摇奖操作按钮 -->
+                        <button id="btn-spin" onclick="turnCrank()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-950 cute-font text-base sm:text-lg px-5 py-2.5 rounded-2xl shadow-lg border-2 border-amber-200 transition transform hover:scale-105 active:scale-95 flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> 转动扭蛋！
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- 答题统计信息栏 -->
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm font-extrabold text-pink-700">
+                <span class="bg-pink-100 px-3 py-1.5 rounded-full border border-pink-300">
+                    <i class="fa-solid fa-database text-pink-500 mr-1"></i> 剩余扭蛋: <strong id="remaining-questions-count" class="text-pink-600 text-base">50</strong> / 50 题
+                </span>
+            </div>
+
+        </section>
+
+    </div>
+
+    <!-- 弹窗 1: 扭蛋题目 Modal -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border-4 border-pink-300 transform transition-all scale-100">
+            
+            <!-- 头部信息 -->
+            <div class="flex items-center justify-between mb-3 border-b-2 border-pink-100 pb-2">
+                <div class="flex items-center gap-2">
+                    <span id="modal-player-badge" class="bg-pink-500 text-white font-black text-xs px-3 py-1 rounded-full">
+                        小仙女 1 的题目
+                    </span>
+                    <span id="modal-unit-badge" class="bg-purple-100 text-purple-700 font-extrabold text-xs px-2.5 py-1 rounded-lg border border-purple-200">
+                        单元 1
+                    </span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">答对可得 +10 积分</span>
+            </div>
+
+            <!-- 扭蛋彩球图标与问题 -->
+            <div class="text-center mb-5">
+                <div id="modal-egg-icon" class="text-5xl mb-2 animate-bounce">🎁</div>
+                <h3 id="modal-question-text" class="text-base sm:text-lg font-extrabold text-slate-800 leading-relaxed">
+                    题目加载中...
+                </h3>
+            </div>
+
+            <!-- 选项列表 -->
+            <div id="modal-options-container" class="grid grid-cols-1 gap-2.5 mb-4">
+                <!-- 动态生成选项按钮 -->
+            </div>
+
+            <!-- 答案解析反馈框 -->
+            <div id="modal-explain-box" class="hidden bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 mb-4">
+                <div class="flex items-start gap-2">
+                    <i id="modal-explain-icon" class="fa-solid fa-circle-check text-emerald-500 text-lg mt-0.5"></i>
+                    <div>
+                        <h4 id="modal-explain-title" class="font-bold text-emerald-800 text-xs sm:text-sm">回答正确！</h4>
+                        <p id="modal-explain-text" class="text-xs text-emerald-700 mt-0.5">解析内容...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部按钮 -->
+            <button id="modal-next-btn" onclick="closeQuizModalAndNext()" class="hidden w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white cute-font text-base py-3 rounded-2xl shadow-lg transition">
+                下一位小仙女挑战 <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- 弹窗 2: 终局结算排行榜 Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-3 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-amber-300 text-center">
+            <div class="text-6xl mb-2 animate-bounce">🏆</div>
+            <h2 class="cute-font text-2xl text-amber-600 mb-1">科学扭蛋大冒险通关！</h2>
+            <p class="text-xs text-slate-500 mb-4">太棒啦！50道科学题目全被你们攻克啦！</p>
+
+            <!-- 排行榜 -->
+            <div id="victory-leaderboard" class="space-y-2 mb-6">
+                <!-- 动态渲染 4 位小女生的名次 -->
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white cute-font text-lg py-3 rounded-2xl shadow-lg transition">
+                重新开始新游戏 <i class="fa-solid fa-rotate-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 浮动特效文字容器 -->
+    <div id="float-container" class="fixed inset-0 pointer-events-none z-50"></div>
+
+    <!-- 音效模块 (Web Audio API) -->
+    <script>
+        let soundEnabled = true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            if (!audioCtx) audioCtx = new AudioContext();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'crank') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(500, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                osc.frequency.setValueAtTime(783.99, now + 0.16);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(160, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'eggPop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('btn-sound');
+            btn.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+        }
+    </script>
+
+    <!-- 游戏核心逻辑与 50 题题库 -->
+    <script>
+        // 4 位玩家数据
+        let players = [
+            { id: 0, name: '小仙女 1', score: 0, correctCount: 0, color: 'from-pink-400 to-rose-400' },
+            { id: 1, name: '小仙女 2', score: 0, correctCount: 0, color: 'from-purple-400 to-indigo-400' },
+            { id: 2, name: '小仙女 3', score: 0, correctCount: 0, color: 'from-amber-400 to-yellow-400' },
+            { id: 3, name: '小仙女 4', score: 0, correctCount: 0, color: 'from-emerald-400 to-teal-400' }
+        ];
+
+        let currentPlayerIndex = 0;
+        let isSpinning = false;
+        let currentQuestion = null;
+
+        // 扭蛋颜色库与图标
+        const eggColors = [
+            { bg: 'from-pink-400 to-rose-500', icon: '🌸' },
+            { bg: 'from-purple-400 to-indigo-500', icon: '⭐' },
+            { bg: 'from-amber-300 to-orange-500', icon: '👑' },
+            { bg: 'from-emerald-400 to-teal-500', icon: '🍀' },
+            { bg: 'from-sky-400 to-blue-500', icon: '💎' },
+            { bg: 'from-fuchsia-400 to-pink-500', icon: '🦄' }
+        ];
+
+        // 50 道精选一年级科学题目（覆盖单元 1 - 8）
+        const allQuestions = [
+            // --- 单元1：科学技能 ---
+            { unit: "单元1: 科学技能", q: "我们要知道花的颜色和形状，应该运用哪种感官？", options: ["视觉（眼睛）", "听觉（耳朵）", "味觉（舌头）"], ans: 0, explain: "用眼睛看物体的颜色和形状属于视觉。" },
+            { unit: "单元1: 科学技能", q: "把大大小小的贝壳按照【颜色】分到不同的盒子里，这是运用了什么技能？", options: ["分类", "测量", "推断"], ans: 0, explain: "把具有相同特征的物体整理在一起叫分类。" },
+            { unit: "单元1: 科学技能", q: "用尺子测量小树的高度，并记录下长度，这是运用了什么技能？", options: ["测量", "预测", "观察"], ans: 0, explain: "使用工具量度物体的长度或重量属于测量。" },
+            { unit: "单元1: 科学技能", q: "看见天上有乌黑的云朵，猜想“等一下可能会下雨”，这是运用了什么技能？", options: ["预测", "测量", "分类"], ans: 0, explain: "根据经验和已有线索预先推测未来发生的事叫预测。" },
+            { unit: "单元1: 科学技能", q: "做完科学实验后，捕捉到的活昆虫应该怎么处理？", options: ["放回大自然原处", "丢进垃圾桶", "带回家锁起来"], ans: 0, explain: "爱护动物，实验后要把标本放回大自然。" },
+            { unit: "单元1: 科学技能", q: "使用完玻璃烧杯和科学仪器后，我们应该怎么做？", options: ["清洗干净并用双手放回原位", "随便堆在桌上", "带回家当玩具"], ans: 0, explain: "正确清洗并安全存放科学仪器是重要的操纵性技能。" },
+
+            // --- 单元2：科学室规则 ---
+            { unit: "单元2: 科学室规则", q: "在进入科学室之前，同学们应该怎么做？", options: ["在门外排好队，等老师带领", "直接冲进去玩", "带零食进去吃"], ans: 0, explain: "遵守秩序，在科学室外排队等候老师指示才能进入。" },
+            { unit: "单元2: 科学室规则", q: "在科学室内可以吃东西或者喝水吗？", options: ["绝对不可以", "可以偷吃零食", "随便喝饮品"], ans: 0, explain: "科学室里有化学药品，禁止饮食以防中毒。" },
+            { unit: "单元2: 科学室规则", q: "如果在实验过程中不小心打破了玻璃瓶，应该怎么做？", options: ["立刻报告老师", "用手捡起来藏起来", "装作不知道"], ans: 0, explain: "发生任何意外或损坏都要第一时间报告老师。" },
+            { unit: "单元2: 科学室规则", q: "离开科学室之前，哪项行为是正确的？", options: ["关好电风扇、灯和水龙头，清理桌面", "把垃圾丢在地上", "把仪器带回家"], ans: 0, explain: "离开科学室前要打扫干净并关好电源和水龙头。" },
+            { unit: "单元2: 科学室规则", q: "在科学室内做实验时，可以在走廊上追逐打闹吗？", options: ["不可以，非常危险", "可以，很好玩", "随便追跑"], ans: 0, explain: "追逐打闹容易撞倒仪器或发生危险。" },
+
+            // --- 单元3：生物与非生物 ---
+            { unit: "单元3: 生物与非生物", q: "下列哪一项属于【生物】？", options: ["小狗", "玩具熊", "石头"], ans: 0, explain: "小狗有生命、会成长呼吸，是生物。" },
+            { unit: "单元3: 生物与非生物", q: "小花猫长大了，生下了3只可爱的小猫咪，这说明生物会？", options: ["繁殖", "呼吸", "睡觉"], ans: 0, explain: "繁衍后代说明生物具有繁殖的能力。" },
+            { unit: "单元3: 生物与非生物", q: "下列哪项是生物维持生命的基本需求之一？", options: ["水和食物", "糖果和饮料", "玩具和游戏机"], ans: 0, explain: "水、食物、空气和庇护所是生物的基本需求。" },
+            { unit: "单元3: 生物与非生物", q: "人如果被困在完全没有【空气】的地方会怎么样？", options: ["无法呼吸而无法生存", "长得更高", "没有任何影响"], ans: 0, explain: "所有生物都需要空气来进行呼吸。" },
+            { unit: "单元3: 生物与非生物", q: "小鸟在树上搭窝、兔子住在洞穴里，这是生物需要什么？", options: ["庇护所（住所）", "玩具", "衣服"], ans: 0, explain: "庇护所能保护生物免受风吹雨打和天敌伤害。" },
+            { unit: "单元3: 生物与非生物", q: "汽车会移动，也会吸油“吃东西”，汽车是生物吗？", options: ["不是，它没有生命也不会繁殖成长", "是生物", "不确定"], ans: 0, explain: "汽车是非生物，它不会成长、繁殖或呼吸。" },
+            { unit: "单元3: 生物与非生物", q: "种在盆里的小树苗过了一个月后变高变大了，说明生物会？", options: ["成长", "移动", "呼气"], ans: 0, explain: "身体随着时间变大变高称为成长。" },
+
+            // --- 单元4：人类 ---
+            { unit: "单元4: 人类", q: "我们用什么器官来聆听美妙的音乐？", options: ["耳朵（听觉）", "眼睛（视觉）", "鼻子（嗅觉）"], ans: 0, explain: "耳朵是我们的听觉器官。" },
+            { unit: "单元4: 人类", q: "妈妈在厨房炒菜，小明在房间就闻到了香味，他是用了什么器官？", options: ["鼻子（嗅觉）", "舌头（味觉）", "皮肤（触觉）"], ans: 0, explain: "鼻子能嗅出香甜苦臭等气味。" },
+            { unit: "单元4: 人类", q: "吃冰淇淋时，我们用什么器官尝出它是甜甜的？", options: ["舌头（味觉）", "眼睛（视觉）", "耳朵（听觉）"], ans: 0, explain: "舌头上的味蕾能分辨酸甜苦辣咸。" },
+            { unit: "单元4: 人类", q: "摸一摸小猫咪的毛发，感觉软绵绵的，这是利用了什么感官？", options: ["皮肤（触觉）", "味觉", "听觉"], ans: 0, explain: "皮肤覆盖全身，使我们产生触觉（冷热软硬）。" },
+            { unit: "单元4: 人类", q: "如果天黑戴上黑墨镜，会影响哪种感官看东西？", options: ["视觉（眼睛）", "嗅觉", "听觉"], ans: 0, explain: "眼睛受阻会影响视觉。" },
+            { unit: "单元4: 人类", q: "盲人朋友看不见，但可以通过摸盲文书本学习，这是利用了什么？", options: ["皮肤的触觉", "味觉", "视觉"], ans: 0, explain: "利用手指皮肤的触觉来感受凹凸盲文。" },
+
+            // --- 单元5：动物 ---
+            { unit: "单元5: 动物", q: "鸟类能在天空飞翔，主要是因为它们身上长有什么部位？", options: ["羽毛和翅膀", "鳞片", "硬角"], ans: 0, explain: "翅膀和羽毛帮助鸟类飞翔。" },
+            { unit: "单元5: 动物", q: "鱼类能在水里游动，主要靠什么身体部位平衡与游泳？", options: ["鳍和尾巴", "脚", "喙"], ans: 0, explain: "鱼鳍和鱼尾帮助鱼在水里游动。" },
+            { unit: "单元5: 动物", q: "蜗牛和乌龟背上坚硬的【壳】有什么作用？", options: ["保护脆弱的身体", "帮忙跑步", "用来吃东西"], ans: 0, explain: "外壳能保护动物脆弱的身体免受伤害。" },
+            { unit: "单元5: 动物", q: "青蛙在陆地上靠什么方式移动？", options: ["跳跃", "飞翔", "蠕动"], ans: 0, explain: "青蛙后腿强壮，擅长跳跃。" },
+            { unit: "单元5: 动物", q: "只吃植物（如草、树叶、水果）的动物被称为？", options: ["食草动物", "食肉动物", "杂食动物"], ans: 0, explain: "只吃植物的动物叫食草动物（如牛、兔）。" },
+            { unit: "单元5: 动物", q: "老虎、狮子捕食其他小动物，它们属于什么食性？", options: ["食肉动物", "食草动物", "杂食动物"], ans: 0, explain: "只吃其他动物肉类的叫食肉动物。" },
+            { unit: "单元5: 动物", q: "小鸡既吃玉米粒（植物），又吃小虫子（肉类），它是？", options: ["杂食动物", "食草动物", "食肉动物"], ans: 0, explain: "既吃植物又吃肉类的动物叫杂食动物。" },
+            { unit: "单元5: 动物", q: "公牛头上长着尖尖硬硬的【角】，主要用来做什么？", options: ["自卫与抵御天敌", "吃草", "听声音"], ans: 0, explain: "角的硬度能帮牛攻击敌人或保护自己。" },
+
+            // --- 单元6：植物 ---
+            { unit: "单元6: 植物", q: "植物深深扎在泥土里，用来吸收水分和养分的部位叫什么？", options: ["根", "茎", "叶子"], ans: 0, explain: "植物的根负责吸收水分与养分。" },
+            { unit: "单元6: 植物", q: "支撑植物向上生长，并输送水分的支柱部位是什么？", options: ["茎", "花", "果实"], ans: 0, explain: "茎支撑着整棵植物，并输送水分和养分。" },
+            { unit: "单元6: 植物", q: "植物利用阳光制作食物的主要部位叫什么？", options: ["叶子", "根", "种子"], ans: 0, explain: "叶子含有叶绿素，能利用阳光制造食物。" },
+            { unit: "单元6: 植物", q: "鲜艳美丽，能吸引小昆虫帮忙传粉的部位是？", options: ["花", "根", "茎"], ans: 0, explain: "花朵颜色鲜艳，用来吸引昆虫传粉。" },
+            { unit: "单元6: 植物", q: "果实里面藏着什么，播种后能长出新植物？", options: ["种子", "泥土", "石头"], ans: 0, explain: "种子包裹在果实内部，发芽长成新幼苗。" },
+            { unit: "单元6: 植物", q: "大树的茎非常坚硬粗壮，称为什么茎？", options: ["木质茎", "草质茎", "水茎"], ans: 0, explain: "大树具有坚硬粗壮的木质茎。" },
+            { unit: "单元6: 植物", q: "向日葵和小草的茎柔软容易弯曲，称为什么茎？", options: ["草质茎", "木质茎", "石头茎"], ans: 0, explain: "小草和向日葵的茎叫草质茎。" },
+            { unit: "单元6: 植物", q: "如果一棵小花完全没有了【根】，它会怎么样？", options: ["无法吸水而枯萎", "长得更快", "开更多花"], ans: 0, explain: "没有根就无法吸收水分，植物会枯萎死亡。" },
+
+            // --- 单元7：磁铁 ---
+            { unit: "单元7: 磁铁", q: "直直长长像一根棒子的磁铁叫作什么？", options: ["条形/棒形磁铁", "U形磁铁", "圆盘形磁铁"], ans: 0, explain: "直棒状的磁铁叫条形磁铁或棒形磁铁。" },
+            { unit: "单元7: 磁铁", q: "弯曲得像英文字母“U”一样的磁铁叫作什么？", options: ["U形磁铁", "环形磁铁", "球形磁铁"], ans: 0, explain: "形状像字母U的磁铁叫U形磁铁。" },
+            { unit: "单元7: 磁铁", q: "磁铁能够吸引由什么材料制成的物品？", options: ["铁（铁制品）", "塑料", "木头"], ans: 0, explain: "磁铁只能吸引铁制品。" },
+            { unit: "单元7: 磁铁", q: "下列哪种物品会被磁铁吸住？", options: ["铁回形针", "塑料尺", "木橡皮擦"], ans: 0, explain: "铁回形针是铁制品，会被磁铁吸引。" },
+            { unit: "单元7: 磁铁", q: "磁铁【不能】吸引下列哪种物品？", options: ["木制铅笔", "铁钉", "铁钥匙"], ans: 0, explain: "木头不是铁制品，磁铁无法吸引。" },
+            { unit: "单元7: 磁铁", q: "磁铁有两个极，分别叫作什么？", options: ["北极(N) 和 南极(S)", "东极 和 西极", "左极 和 右极"], ans: 0, explain: "磁铁有 N极（北极）和 S极（南极）。" },
+            { unit: "单元7: 磁铁", q: "当两个磁铁【相同】的磁极（如 N 和 N）靠近时，会怎样？", options: ["互相排斥（推开）", "互相吸引（吸住）", "没有变化"], ans: 0, explain: "同性相斥！相同的磁极靠近会互相排斥。" },
+            { unit: "单元7: 磁铁", q: "当两个磁铁【不相同】的磁极（如 N 和 S）靠近时，会怎样？", options: ["互相吸引（吸住）", "互相排斥（推开）", "会变小"], ans: 0, explain: "异性相吸！不同的磁极靠近会紧紧吸在一起。" },
+            { unit: "单元7: 磁铁", q: "磁铁的哪一部分磁力最强？", options: ["两端的磁极", "中间部位", "到处都一样"], ans: 0, explain: "磁铁两端的磁极（N极和S极）磁力最强！" },
+
+            // --- 单元8：吸水能力 ---
+            { unit: "单元8: 吸水能力", q: "洗完手后用棉布毛巾擦手，水分被毛巾吸干了。毛巾属于？", options: ["能吸水的材料", "不能吸水的材料", "会发光的材料"], ans: 0, explain: "棉布毛巾具有吸水能力。" },
+            { unit: "单元8: 吸水能力", q: "下雨天穿的【塑料雨衣】会让水渗进来吗？", options: ["不会，塑料不能吸水", "会，塑料吸水很强", "不确定"], ans: 0, explain: "塑料不能吸水，所以用来做雨衣防雨。" },
+            { unit: "单元8: 吸水能力", q: "桌子上有水打翻了，用下列哪种物品能最快把水吸干？", options: ["面巾纸/海绵", "塑料尺", "铁匙羹"], ans: 0, explain: "面巾纸和海绵具有极强的吸水能力。" },
+            { unit: "单元8: 吸水能力", q: "下列哪种材料是【不能吸水】的？", options: ["塑料和金属", "棉布", "纸张"], ans: 0, explain: "塑料和金属都是不能吸水的材料。" },
+            { unit: "单元8: 吸水能力", q: "比较吸水能力：【面巾纸】和【普通书写纸】，谁的吸水能力更强？", options: ["面巾纸", "普通书写纸", "两者一样"], ans: 0, explain: "面巾纸质地疏松，吸水能力比普通书写纸强。" },
+            { unit: "单元8: 吸水能力", q: "我们在雨天用的【雨伞】，伞面是用什么材料做的？", options: ["不能吸水的防水布/塑料", "容易吸水的棉布", "纸张"], ans: 0, explain: "雨伞使用不吸水的材料来挡雨。" },
+            { unit: "单元8: 吸水能力", q: "妈妈洗完碗后用海绵擦桌子，海绵能吸水是因为？", options: ["海绵是能吸水的材料", "海绵是金属", "海绵是塑料"], ans: 0, explain: "海绵孔隙多，是吸水能力很强的材料。" },
+            { unit: "单元8: 吸水能力", q: "玻璃杯装水不会漏出来，因为玻璃是？", options: ["不能吸水的材料", "非常吸水的材料", "柔软的材料"], ans: 0, explain: "玻璃不能吸水也不透水。" }
+        ];
+
+        let remainingQuestions = [];
+
+        // 初始化
+        window.onload = function() {
+            resetGameData();
+            renderPlayersGrid();
+            renderGachaBallsInGlass();
+        };
+
+        // 重置游戏数据
+        function resetGameData() {
+            players.forEach(p => {
+                p.score = 0;
+                p.correctCount = 0;
+            });
+            currentPlayerIndex = 0;
+            // 深拷贝并打乱题目顺序
+            remainingQuestions = JSON.parse(JSON.stringify(allQuestions));
+            shuffleArray(remainingQuestions);
+            updateRemainingCount();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 渲染 4 位玩家的名字卡
+        function renderPlayersGrid() {
+            const grid = document.getElementById('players-grid');
+            grid.innerHTML = '';
+
+            players.forEach((p, idx) => {
+                const isCurrent = (idx === currentPlayerIndex);
+                const card = document.createElement('div');
+                card.className = `rounded-2xl p-2.5 sm:p-3 border-2 transition-all relative overflow-hidden ${
+                    isCurrent 
+                        ? 'bg-gradient-to-b from-pink-100 to-purple-100 border-pink-500 shadow-md scale-105 ring-4 ring-pink-300' 
+                        : 'bg-white border-pink-100 opacity-90'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${p.color} text-white shadow-xs">
+                            P${idx + 1}
+                        </span>
+                        <span class="text-xs font-black text-amber-600 flex items-center gap-1">
+                            <i class="fa-solid fa-star text-amber-400"></i> ${p.score} 分
+                        </span>
+                    </div>
+
+                    <!-- 可编辑名字框 -->
+                    <input type="text" value="${p.name}" onchange="updatePlayerName(${idx}, this.value)" 
+                           class="w-full bg-white/80 border border-pink-200 rounded-lg px-2 py-1 text-xs font-extrabold text-pink-900 focus:outline-none focus:border-pink-500 text-center truncate shadow-inner" 
+                           placeholder="输入名字" />
+
+                    <div class="mt-1 text-[10px] text-slate-500 font-bold text-center">
+                        答对: <span class="text-pink-600 font-black">${p.correctCount}</span> 题
+                    </div>
+
+                    ${isCurrent ? `<div class="absolute top-0 right-0 w-3 h-3 bg-pink-500 rounded-full animate-ping"></div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+
+            // 更新指示器
+            document.getElementById('turn-indicator-badge').innerText = `当前回合: ${players[currentPlayerIndex].name}`;
+        }
+
+        function updatePlayerName(idx, newName) {
+            if (newName.trim() !== '') {
+                players[idx].name = newName.trim();
+                renderPlayersGrid();
+            }
+        }
+
+        // 渲染玻璃罩里的散乱彩蛋
+        function renderGachaBallsInGlass() {
+            const container = document.getElementById('gacha-balls-container');
+            container.innerHTML = '';
+
+            const ballCount = Math.min(remainingQuestions.length, 18);
+            for (let i = 0; i < ballCount; i++) {
+                const colorObj = eggColors[i % eggColors.length];
+                const ball = document.createElement('div');
+
+                // 随机位置与浮动
+                const left = 15 + Math.random() * 65;
+                const top = 25 + Math.random() * 55;
+                const size = 32 + Math.random() * 12;
+
+                ball.className = `absolute rounded-full bg-gradient-to-tr ${colorObj.bg} shadow-md border-2 border-white/60 flex items-center justify-center text-xs opacity-90`;
+                ball.style.left = `${left}%`;
+                ball.style.top = `${top}%`;
+                ball.style.width = `${size}px`;
+                ball.style.height = `${size}px`;
+                ball.innerText = colorObj.icon;
+
+                container.appendChild(ball);
+            }
+        }
+
+        // 旋转手柄摇出扭蛋
+        function turnCrank() {
+            if (isSpinning) return;
+            if (remainingQuestions.length === 0) {
+                showVictoryModal();
+                return;
+            }
+
+            isSpinning = true;
+            playSound('crank');
+
+            // 手柄动画
+            const crank = document.getElementById('gacha-crank-btn');
+            crank.classList.add('crank-rotate');
+
+            // 玻璃罩彩蛋抖动
+            renderGachaBallsInGlass();
+
+            setTimeout(() => {
+                crank.classList.remove('crank-rotate');
+                dropEggFromMachine();
+            }, 800);
+        }
+
+        // 掉落扭蛋
+        function dropEggFromMachine() {
+            const exitArea = document.getElementById('egg-exit-area');
+            playSound('eggPop');
+
+            const randomColor = eggColors[Math.floor(Math.random() * eggColors.length)];
+
+            exitArea.innerHTML = `
+                <div id="dropped-egg" onclick="openDroppedEgg()" class="w-12 h-12 rounded-full bg-gradient-to-tr ${randomColor.bg} border-2 border-white shadow-lg cursor-pointer flex items-center justify-center text-lg egg-drop-anim egg-bounce">
+                    ${randomColor.icon}
+                </div>
+            `;
+
+            showFloatText('点击彩蛋开启题目！', window.innerWidth/2, window.innerHeight/2 + 50, 'text-pink-600');
+        }
+
+        // 点击开启掉落的扭蛋
+        function openDroppedEgg() {
+            if (!isSpinning) return;
+            playSound('click');
+
+            // 抽取一道题
+            currentQuestion = remainingQuestions.pop();
+            updateRemainingCount();
+
+            // 清空出口
+            document.getElementById('egg-exit-area').innerHTML = '';
+
+            // 打开题目 Modal
+            showQuizModal(currentQuestion);
+            isSpinning = false;
+        }
+
+        // 弹出题目 Modal
+        function showQuizModal(q) {
+            const modal = document.getElementById('quiz-modal');
+            const player = players[currentPlayerIndex];
+
+            document.getElementById('modal-player-badge').innerText = `${player.name} 的题目`;
+            document.getElementById('modal-player-badge').className = `bg-gradient-to-r ${player.color} text-white font-black text-xs px-3 py-1 rounded-full shadow-xs`;
+            
+            document.getElementById('modal-unit-badge').innerText = q.unit;
+            document.getElementById('modal-question-text').innerText = q.q;
+
+            const optionsContainer = document.getElementById('modal-options-container');
+            optionsContainer.innerHTML = '';
+
+            // 打乱选项顺序
+            const optsWithIndex = q.options.map((opt, originalIdx) => ({ text: opt, isCorrect: originalIdx === q.ans }));
+            shuffleArray(optsWithIndex);
+
+            optsWithIndex.forEach((item, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full bg-white hover:bg-pink-50 text-slate-800 font-extrabold p-3.5 sm:p-4 rounded-2xl border-2 border-pink-200 shadow-sm text-left text-xs sm:text-sm transition flex items-center gap-2.5 active:scale-98';
+                btn.innerHTML = `<span class="w-7 h-7 rounded-xl bg-pink-100 text-pink-600 text-xs flex items-center justify-center font-black">${String.fromCharCode(65 + idx)}</span> ${item.text}`;
+                btn.onclick = () => checkQuizAnswer(item.isCorrect, q);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('modal-explain-box').classList.add('hidden');
+            document.getElementById('modal-next-btn').classList.add('hidden');
+
+            modal.classList.remove('hidden');
+        }
+
+        // 检查答案
+        function checkQuizAnswer(isCorrect, q) {
+            const explainBox = document.getElementById('modal-explain-box');
+            const explainTitle = document.getElementById('modal-explain-title');
+            const explainText = document.getElementById('modal-explain-text');
+            const nextBtn = document.getElementById('modal-next-btn');
+
+            // 禁用选项按钮
+            const optionsBtns = document.querySelectorAll('#modal-options-container button');
+            optionsBtns.forEach(btn => btn.disabled = true);
+
+            const currentPlayer = players[currentPlayerIndex];
+
+            if (isCorrect) {
+                playSound('correct');
+                currentPlayer.score += 10;
+                currentPlayer.correctCount += 1;
+
+                explainTitle.innerText = `🎉 太棒啦，${currentPlayer.name} 回答正确！`;
+                explainTitle.className = "font-bold text-emerald-800 text-xs sm:text-sm";
+                explainBox.className = "bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 mb-4";
+                explainText.innerText = `${q.explain} (加 +10 分)`;
+
+                showFloatText('+10 积分！', window.innerWidth/2, window.innerHeight/2 - 80, 'text-emerald-600');
+            } else {
+                playSound('wrong');
+                explainTitle.innerText = `❌ 差一点点，加油哦！`;
+                explainTitle.className = "font-bold text-rose-800 text-xs sm:text-sm";
+                explainBox.className = "bg-rose-50 border-2 border-rose-300 rounded-2xl p-3.5 mb-4";
+                explainText.innerText = `正确答案是：${q.options[q.ans]}。解析：${q.explain}`;
+            }
+
+            renderPlayersGrid();
+            explainBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        // 关闭题目 Modal 并切换到下一位玩家
+        function closeQuizModalAndNext() {
+            playSound('click');
+            document.getElementById('quiz-modal').classList.add('hidden');
+
+            // 检查是否全答完
+            if (remainingQuestions.length === 0) {
+                showVictoryModal();
+                return;
+            }
+
+            // 轮到下一位
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            renderPlayersGrid();
+            renderGachaBallsInGlass();
+        }
+
+        function updateRemainingCount() {
+            document.getElementById('remaining-questions-count').innerText = remainingQuestions.length;
+        }
+
+        // 结算模态框
+        function showVictoryModal() {
+            playSound('correct');
+            const leaderboard = document.getElementById('victory-leaderboard');
+            leaderboard.innerHTML = '';
+
+            // 按分数降序排列
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+
+            const medals = ['🥇 第一名', '🥈 第二名', '🥉 第三名', '✨ 第四名'];
+
+            sortedPlayers.forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = 'bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 flex items-center justify-between shadow-sm';
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-xs text-amber-800">${medals[idx]}</span>
+                        <span class="font-black text-sm text-pink-700">${p.name}</span>
+                    </div>
+                    <div class="text-xs font-bold text-amber-900">
+                        积分: <strong class="text-amber-600 text-sm">${p.score}</strong> 分 (答对${p.correctCount}题)
+                    </div>
+                `;
+                leaderboard.appendChild(row);
+            });
+
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        function resetGameConfirm() {
+            if (confirm("确定要重置所有分数和题目重新开始吗？")) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('victory-modal').classList.add('hidden');
+            document.getElementById('quiz-modal').classList.add('hidden');
+            document.getElementById('egg-exit-area').innerHTML = '';
+            resetGameData();
+            renderPlayersGrid();
+            renderGachaBallsInGlass();
+            isSpinning = false;
+        }
+
+        // 飘字特效
+        function showFloatText(text, x, y, colorClass = 'text-pink-600') {
+            const container = document.getElementById('float-container');
+            const el = document.createElement('div');
+            el.className = `absolute font-black text-base sm:text-lg ${colorClass} float-text pointer-events-none drop-shadow-md z-50 transform -translate-x-1/2`;
+            el.style.left = `${x || window.innerWidth/2}px`;
+            el.style.top = `${y || window.innerHeight/2}px`;
+            el.innerText = text;
+
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        }
+    </script>
+</body>
+</html>
